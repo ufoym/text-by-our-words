@@ -1,5 +1,5 @@
 # -*- coding: utf8 -*-
-import numpy as np, sys, os, cPickle as pickle, random
+import numpy as np, sys, os, cPickle as pickle, random, codecs
 from datetime import datetime
 
 def read_message(fn):
@@ -75,16 +75,25 @@ def make_word(messages, word, max_length):
 			continue
 	return None, None, None, None
 
-max_length = 50
-messages = load_message('var/raw.txt', 'var/msg.db')
-if messages is not None:
-	# stat_day(messages)
-	sentence = '泪如雨下在你的发，冲化了最美的年华。'
-	for word in sentence.decode('utf-8'):
-		result = make_word(messages, word, max_length)
-		time, author, body, idx = result
-		if time is not None:
-			sentence_for_word = ''.join(['  '] * (max_length-idx) + [body])
-			print sentence_for_word
-		else:
-			print word
+
+def write_sentences(fn, max_length = 50):
+	messages = load_message('var/raw.txt', 'var/msg.db')
+	if messages is not None:
+		# stat_day(messages)
+		sentence = '泪如雨下在你的发，冲化了最美的年华。'
+
+		sentences = []
+		for word in sentence.decode('utf-8'):
+			result = make_word(messages, word, max_length)
+			time, author, body, idx = result
+			if time is not None:
+				terms = body.decode('utf-8').split(word)
+				sentence_for_word = ''.join([terms[0],'<b>',word,'</b>',terms[1]])
+				sentences.append(sentence_for_word)
+			else:
+				sentences.append(word)
+		content = '\n'.join(['<html>', '<br/>\n'.join(sentences), '</html>'])
+		with codecs.open(fn, 'w', 'gbk') as f:
+			f.write(content)
+
+write_sentences('out.html')
