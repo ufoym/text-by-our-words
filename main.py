@@ -1,5 +1,5 @@
 # -*- coding: utf8 -*-
-import numpy as np, sys, os, cPickle as pickle
+import numpy as np, sys, os, cPickle as pickle, random
 from datetime import datetime
 
 def read_message(fn):
@@ -63,6 +63,28 @@ def load_message(fn_raw, fn_msg):
 			pickle.dump(messages, f)
 	return messages
 
+def make_word(messages, word, max_length):
+	random.shuffle(messages)
+	for time, author, body in messages:
+		if len(body) > max_length:
+			continue
+		try:
+			idx = body.decode('utf-8').index(word)
+			return time, author, body, idx
+		except ValueError:
+			continue
+	return None, None, None, None
+
+max_length = 50
 messages = load_message('var/raw.txt', 'var/msg.db')
 if messages is not None:
-	stat_day(messages)
+	# stat_day(messages)
+	sentence = '泪如雨下在你的发，冲化了最美的年华。'
+	for word in sentence.decode('utf-8'):
+		result = make_word(messages, word, max_length)
+		time, author, body, idx = result
+		if time is not None:
+			sentence_for_word = ''.join(['  '] * (max_length-idx) + [body])
+			print sentence_for_word
+		else:
+			print word
